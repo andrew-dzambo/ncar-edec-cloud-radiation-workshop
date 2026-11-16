@@ -1,0 +1,33 @@
+{
+  "snapshots": [
+    {
+      "name": "rte-rrtmgp",
+      "version": "1.9.3",
+      "commit": "c4098f552dc362986d67a32377c511d60b1d3d1b",
+      "sha256": "9b56974d624e7385d39edf3b4db17ba402cc23fc9ad39b37138b1f164a8b5699",
+      "destination": "vendor/rte-rrtmgp-v1.9.3"
+    },
+    {
+      "name": "pyRTE-RRTMGP",
+      "version": "0.2.5",
+      "commit": "2fcb4eb306708c8a38974f34371c4206a505ce9f",
+      "sha256": "de64fe212d1b162c0aee85e240500e9a049b7234cc1e89c3267b0dd11d21cdd6",
+      "destination": "vendor/pyRTE-RRTMGP-v0.2.5"
+    },
+    {
+      "name": "rrtmgp-data",
+      "version": "1.9",
+      "commit": "eff0433faf9cbac3ad14fbf608bef0c26ebc4c79",
+      "sha256": "0872e828edba998b43f245a68f27f6605277190e3a251267348e6780e076377a",
+      "destination": ".cache/rrtmgp-data"
+    }
+  ],
+  "coefficient_sha256": {
+    "rrtmgp-gas-lw-g256.nc": "4048360199d1917ed8f2ccaae2ec097d0f990da3bbad9830337b739b4fa01be7",
+    "rrtmgp-gas-sw-g224.nc": "584f1dd41ea9fc07d4ee3754eb1dafbd46ad3161cd6fd20fa06b6922b6f0702e",
+    "rrtmgp-clouds-lw-bnd.nc": "09d6704c5b863b4c3ceb417d20bb3076ec492e6bf2dfbcc9f3c5996a3706f0b0",
+    "rrtmgp-clouds-sw-bnd.nc": "7671835992a45afe66244b591a02c0b3df73d7d59ecb746bbffd9763497651cd"
+  },
+  "compiled_runtime": "conda-forge rte_rrtmgp 1.9.2",
+  "python_interface": "pyrte_rrtmgp 0.2.5"
+}

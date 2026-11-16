@@ -1,0 +1,22 @@
+# Readable specification. setup_workshop.sh prefers the tested explicit lockfile.
+# Execution is on a Linux x86_64 server; Windows/macOS are SSH/browser clients.
+name: rrtmgp-workshop
+channels:
+  - conda-forge
+  - nodefaults
+dependencies:
+  - python=3.11
+  - pyrte_rrtmgp=0.2.5
+  - rte_rrtmgp=1.9.2
+  - numpy
+  - scipy
+  - pandas
+  - xarray
+  - netcdf4
+  - matplotlib-base
+  - jupyterlab
+  - ipykernel
+  - nbformat
+  - nbclient
+  - nbconvert
+  - pytest

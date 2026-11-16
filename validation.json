@@ -1,0 +1,63 @@
+{
+  "status": "passed",
+  "checked_at_utc": "2026-11-16T06:12:51.524935+00:00",
+  "upstream_reference_tolerance": {
+    "relative": 1e-05,
+    "absolute_W_m2": 1e-07
+  },
+  "upstream_reference_max_absolute_errors_W_m2": {
+    "sw_flux_up": 2.5211586489604088e-06,
+    "sw_flux_down": 2.911147703343886e-06,
+    "lw_flux_up": 5.724918395344503e-06,
+    "lw_flux_down": 5.946264991507633e-06
+  },
+  "invalid_input_checks": 10,
+  "profile_checks": {
+    "cases": 12,
+    "minimum_cloud_layers": 40,
+    "max_water_path_error_g_m2": 0.0,
+    "max_layer_shape_error_g_m2": 2.708944180085382e-14
+  },
+  "radiation_checks": {
+    "cases": [
+      {
+        "case": "zero_thin",
+        "depth_m": 50.0,
+        "layers": 136,
+        "surface_total_cre_W_m2": 0.0,
+        "elapsed_seconds": 0.367
+      },
+      {
+        "case": "liquid_thin",
+        "depth_m": 50.0,
+        "layers": 136,
+        "surface_total_cre_W_m2": -207.7723219694239,
+        "elapsed_seconds": 0.286
+      },
+      {
+        "case": "mixed_default",
+        "depth_m": 1000.0,
+        "layers": 132,
+        "surface_total_cre_W_m2": -226.5366577603067,
+        "elapsed_seconds": 0.261
+      },
+      {
+        "case": "ice_deep",
+        "depth_m": 3000.0,
+        "layers": 204,
+        "surface_total_cre_W_m2": -74.57171927930091,
+        "elapsed_seconds": 0.273
+      },
+      {
+        "case": "mixed_deep",
+        "depth_m": 3000.0,
+        "layers": 204,
+        "surface_total_cre_W_m2": -233.1676873573941,
+        "elapsed_seconds": 0.26
+      }
+    ],
+    "max_column_energy_closure_error_W_m2": 1.4210854715202004e-14
+  },
+  "scope": "Workshop helper and upstream all-sky reference; not a guarantee of observational accuracy or physical realism of imposed clouds.",
+  "elapsed_seconds": 2.207
+}

@@ -1,0 +1,11 @@
+# Machine-specific installations and downloaded upstream content
+envs/
+.cache/
+.tools/
+vendor/
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+
+# Personal experiment outputs; deliberately upload selected results to your fork.
+/outputs/
