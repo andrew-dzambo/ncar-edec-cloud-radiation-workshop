@@ -1,248 +1,153 @@
-"""Rebuild the teaching notebook; execute separately for release verification."""
+"""Rebuild the short, five-cell workshop notebook using only the standard library."""
 from pathlib import Path
-import nbformat as nbf
+import json
+import re
 
-root = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[1]
 cells = []
-def md(text): cells.append(nbf.v4.new_markdown_cell(text))
-def code(text): cells.append(nbf.v4.new_code_cell(text))
 
-md(r'''# Build a cloud, change the radiation
+
+def add_cell(kind, text):
+    cell = {
+        "cell_type": kind,
+        "id": f"workshop-{len(cells):02d}",
+        "metadata": {},
+        "source": text.strip().splitlines(keepends=True),
+    }
+    if kind == "code":
+        cell.update(execution_count=None, outputs=[])
+    cells.append(cell)
+
+
+def md(text):
+    add_cell("markdown", text)
+
+
+def code(text):
+    add_cell("code", text)
+
+
+md('''# Build a cloud, change the radiation
 ### A 50-minute RTE+RRTMGP experiment
 
 **Question:** How does the amount and vertical placement of liquid water and ice change the radiation reaching the surface and escaping toward space?
 
-Run this notebook on the **Linux server**, viewing it from your Windows or Mac laptop. Complete `GETTING_STARTED.md` before class. Use **Shift+Enter** to run each cell in order. The first installation is prework; this notebook can also start that installation from an existing Linux Jupyter session.
+## 1. Open and check — 0–10 minutes
 
-By the end, you will have run the actual radiation engine, built a mass-conserving cloud, tested a prediction, and saved figures plus a result record to your GitHub fork.
+Open the instructor's Jupyter link on your Windows or Mac laptop, or follow the supplied connection instructions now. Select **Python (RRTMGP Workshop)**. The Linux server runs the model; your browser displays the results. All required participant work fits within this session. Use **Shift+Enter** to run each of the five code cells in order.
 
-| Minutes | Your task |
-|---|---|
-| 0–5 | Predict a cloud's effect on sunlight at the surface |
-| 5–10 | Check the engine and learn the flux vocabulary |
-| 10–20 | Run and interpret the baseline |
-| 20–30 | Build your own cloud and check its mass |
-| 30–42 | Run your experiment and compare |
-| 42–47 | Explain one change and one assumption |
-| 47–50 | Save a result to your GitHub fork |
+The first cell checks the prepared model environment. If it stops, show the instructor the message. While everyone connects, predict whether adding liquid water will increase or decrease sunlight reaching the surface.
 
-**Before running:** write a prediction below. Does adding liquid water increase or decrease the sunlight reaching the surface? Why?''')
-md('**My prediction:** _Double-click this Markdown cell and write one sentence._')
-md('''## 1. Download/check the model — 5–10 minutes
-
-The installer retrieves the pinned official source repositories and coefficient tables, and creates an isolated Python environment with a precompiled Fortran library. It reuses completed downloads on subsequent runs. It needs network access on the first run; it does not need administrator rights.
-
-This workshop preserves the prior ROMANS stack: **Python interface 0.2.5 + executing Fortran library 1.9.2**. It also downloads the **1.9.3 source checkout for inspection**. Downloading that source does not mean the Python kernel executes 1.9.3. Package versions and data hashes are recorded for reproducibility.
-
-If this cell installs into a different Python environment, follow the printed kernel instruction and then rerun from the top. The rest of the lesson assumes installation has already finished.''')
+**Plan:** open/check (0–10), baseline (10–20), build/run (20–35), compare (35–43), explain/download (43–50).''')
 code('''from pathlib import Path
-import os
-import platform
-import subprocess
-import sys
+from scripts.workshop_runtime import prepare_notebook
 
 ROOT = Path.cwd().resolve()
-if not (ROOT / "setup_workshop.sh").is_file():
-    raise RuntimeError("Open the notebook from the extracted workshop folder, alongside setup_workshop.sh.")
-if platform.system() != "Linux" or platform.machine() not in ("x86_64", "AMD64"):
-    raise RuntimeError("Run this notebook's kernel on an x86_64 Linux server. Windows/macOS are browser and SSH clients.")
-# Keep 20–30 independent participants from each starting many numerical threads.
-for name in ("OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS", "MKL_NUM_THREADS"):
-    os.environ[name] = "1"
-os.environ["PYTHONNOUSERSITE"] = "1"
-subprocess.run(["bash", str(ROOT / "setup_workshop.sh")], cwd=ROOT, check=True)
-expected = (ROOT / "envs" / "rrtmgp").resolve()
-print("Current Python:", sys.executable)
-if Path(sys.prefix).resolve() != expected:
-    raise RuntimeError("Setup finished. Select Kernel → Change Kernel → Python (RRTMGP Workshop), then restart and run from the top. If absent, restart Jupyter from envs/rrtmgp/bin/jupyter lab.")
-print("Workshop environment is ready.")''')
-code('''import time
-import json
+ready = prepare_notebook(ROOT)  # Checks the prepared runtime; does not install or download.
+print(f"Ready: Python {ready['python_version']}, pyRTE {ready['pyrte_rrtmgp_version']}, "
+      f"RRTMGP {ready['rte_rrtmgp_version']} ({ready['mode']} environment).")
+
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 from IPython.display import display, Image, FileLink
-from workshop_model import (build_column, run_column, save_case,
-                            plot_profiles, boundary_summary, verify_reference,
-                            find_data_dir)
+from workshop_model import build_column, run_column, save_case, boundary_summary
 
 OUTPUT = ROOT / "outputs"
 OUTPUT.mkdir(exist_ok=True)
-print("Coefficient directory:", find_data_dir())
-# First import/table load can take longer than subsequent experiments.
-start = time.perf_counter()
-reference_errors = verify_reference()
-display(pd.DataFrame({"Flux": reference_errors.keys(),
-                      "Maximum absolute reference difference (W/m²)": reference_errors.values()}))
-print(f"Official clear/cloudy reference columns passed in {time.perf_counter()-start:.1f} s.")''')
-md(r'''**What did the check test?** It reproduced the upstream 24-column all-sky example, which includes both cloud-free and cloudy columns, and compared its SW/LW upward and downward fluxes with supplied reference files. It fails visibly if the answers disagree beyond `rtol=1e-5, atol=1e-7 W m⁻²`. This checks implementation; it is **not** an uncertainty estimate for your invented cloud.
+print("Ready to run the baseline.")''')
+md('''## 2. Baseline: follow the energy — 10–20 minutes
 
-**Two jobs, one calculation.** RRTMGP converts pressure, temperature, and gas concentrations into gas optical properties and emission sources. RTE combines these with the boundary conditions to calculate fluxes. We supply cloud optical properties separately. This separation lets us change the cloud while holding the atmosphere fixed. *(Pincus et al., 2019, sections 2.2–2.4, pp. 3077–3079; paraphrased.)*
+**Shortwave (SW)** is sunlight; **longwave (LW)** is thermal infrared radiation. Flux is power per area, in **W m⁻²**.
 
-**Why lookup tables?** Gases absorb very differently across the spectrum. The correlated-k method groups absorption of similar strength within bands and represents a spectral integral using weighted samples called **g-points**. A g-point is not a single fixed wavelength. The coefficient tables affect both accuracy and cost; they belong in the reproducibility record. We use the pinned 224-point SW and 256-point LW tables. *(Pincus et al., sections 2.3 and 3.1; counts verified for the selected files.)*''')
-md(r'''## 2. Baseline: follow the energy — 10–20 minutes
+RRTMGP converts temperature, pressure, and gases into optical properties; RTE uses those properties to calculate fluxes. Cloud optics are supplied separately. This lets us change clouds while holding the atmosphere fixed. *(Pincus et al., 2019, sections 2.2–2.4; paraphrased.)*
 
-**Shortwave (SW)** is sunlight. **Longwave (LW)** is thermal infrared radiation from the surface, atmosphere, and cloud. Flux measures power per unit area, in W m⁻².
+**Clear sky** removes cloud water and ice. **All sky** includes our horizontally uniform cloud: cloud fraction is one within the cloud. Both runs use identical prescribed temperature, gases, sunlight, and surface properties.
 
-We run the same atmospheric column twice: **clear sky** removes cloud water and ice; **all sky** includes them. Temperatures, gases, sunlight, and surface properties stay fixed. Here “all sky” means one horizontally uniform, fully cloudy column wherever cloud water is present, not a partly cloudy area average.
+The baseline has depth **1000 m**, liquid water path **100 g m⁻²**, and ice water path **30 g m⁻²**, with cloud base at 1.5 km. Solid curves are all sky; dashed curves are clear sky. Net flux means **down minus up**.
 
-The teaching atmosphere extends from the surface to 60 km. Its surface temperature is 278 K, surface pressure 101325 Pa, solar zenith angle 60°, albedo 0.15, and emissivity 0.98. Temperature and gases are prescribed analytic profiles, not CAESAR observations. The baseline cloud extends from 1.5 to 2.5 km, with LWP 100 and IWP 30 g m⁻². Liquid effective radius is 10 µm and ice effective **diameter** is 60 µm. Those particle sizes and the fixed ice roughness are teaching choices.
-
-Radiation does not exchange energy with neighboring columns. SW uses a two-stream solver with delta scaling of cloud optics; the selected LW solver uses absorption and emission with one quadrature angle and neglects LW scattering. RTE also supports other solver choices. *(Framework: Pincus et al., introduction and section 2.2; this particular configuration is our choice.)*''')
+**Discuss:** How does the cloud change downward SW and LW at the surface?''')
 code('''baseline_parameters = dict(depth_m=1000.0, lwp_gm2=100.0, iwp_gm2=30.0)
-baseline_atmosphere = build_column(**baseline_parameters)
-start = time.perf_counter()
-baseline = run_column(baseline_atmosphere)
+baseline = run_column(build_column(**baseline_parameters))
 baseline_files = save_case(baseline, OUTPUT, "baseline")
-print(f"Baseline pair finished in {time.perf_counter()-start:.1f} s (including saving figures).")
 display(Image(filename=str(baseline_files["fluxes"])))
-display(Image(filename=str(baseline_files["cre"])))
-display(boundary_summary(baseline).round(2))''')
-md(r'''**Read the plots.** Solid lines are all sky; dashed lines are clear sky. Upward and downward fluxes are positive magnitudes in their own directions. The flux quicklook shows the lower 20 km; the table includes the model top at 60 km, used here as an approximate top-of-atmosphere boundary.
+baseline_summary = boundary_summary(baseline)
+display(baseline_summary.loc[baseline_summary["Boundary"] == "Surface"].round(2))''')
+md('''## 3. Build and run your cloud — 20–35 minutes
 
-We use a net-downward sign convention:
+Edit **one** of the three parameters below; leave the other two at baseline values. The example doubles liquid water path. Write a short prediction, then run the cell.
 
-$$F_\mathrm{net}=F_\downarrow-F_\uparrow,\qquad
-\mathrm{CRE}=F_{\mathrm{net,all}}-F_{\mathrm{net,clear}}.$$
+**LWP/IWP** are column liquid/ice mass per area (**g m⁻²**). **LWC/IWC** are mass per volume (**g m⁻³**). The smooth liquid curve peaks 80% of the way from cloud base to top; ice peaks at 40%. These are chosen teaching shapes. The code integrates them through each layer so the total mass matches your inputs, even for a 50 m cloud.
 
-Positive **cloud radiative effect (CRE)** at the surface means more radiative energy entering the surface. Positive CRE at the top means more energy entering the combined atmosphere–surface system. Neither boundary value alone is the atmospheric heating rate.
+Pincus et al. emphasize that users must supply the cloud-to-optics mapping (section 4). Our particle sizes, cloud shapes, and prescribed atmosphere are workshop assumptions. Temperature and humidity do not respond to the added cloud; no condensation or precipitation is simulated.''')
+code('''# EDIT ONE PARAMETER; baseline values are depth=1000, LWP=100, IWP=30.
+CLOUD_DEPTH_M = 1000.0   # Allowed: 50–3000 m.
+LWP_G_M2 = 200.0         # Nonnegative liquid water path, g/m².
+IWP_G_M2 = 30.0          # Nonnegative ice water path, g/m².
+PREDICTION = ""          # Write one sentence before running.
+EXPERIMENT_NAME = "experiment01"  # Change this name to keep another run.
 
-**Discuss:** Which direction of SW changes most near the surface? Why can a cloud reduce surface sunlight but increase downward LW? Do those effects cancel in this case?''')
-md(r'''## 3. Design a cloud — 20–30 minutes
-
-A **water path** is mass per unit horizontal area; a **water content** is mass per unit volume:
-
-$$\mathrm{LWP}=\int \mathrm{LWC}(z)\,dz,\qquad
-\mathrm{IWP}=\int \mathrm{IWC}(z)\,dz.$$
-
-Enter paths in **g m⁻²** and cloud depth in **m**. The plots show content in **g m⁻³**. Water paths alone do not determine radiation: particle sizes and ice optical assumptions also matter. We hold those fixed in the main experiment. Pincus et al. emphasize the user's responsibility for the cloud-to-optics mapping *(section 4, pp. 3086–3087)*.
-
-For normalized cloud altitude $x=(z-z_b)/H$, with base $z_b$ and depth $H$, we prescribe:
-
-$$\mathrm{LWC}(z)=\frac{\mathrm{LWP}}{H}\,30x^4(1-x),\qquad
-\mathrm{IWC}(z)=\frac{\mathrm{IWP}}{H}\,60x^2(1-x)^3,\quad 0\le x\le1.$$
-
-Both shapes integrate to one before multiplying by path/depth. Their smooth peaks occur at **x = 0.8 for liquid** and **x = 0.4 for ice**. These skewed beta curves give the requested curved rise and fall; a pure exponential cannot peak inside the cloud. **The shapes are workshop assumptions, not a parameterization from the paper.**
-
-The code integrates each curve across layer boundaries using its beta cumulative distribution. Each layer receives an exact fraction of the path, including for 50 m clouds, which have at least 40 layers. Layer-average maxima can differ slightly from the continuous peak locations.
-
-**Change only one variable first.** The supplied experiment doubles LWP relative to the baseline. Choose another group assignment from the instructor if requested.''')
-code('''# -------- EDIT THESE THREE CLOUD PARAMETERS --------
-CLOUD_DEPTH_M = 1000.0   # Allowed range: 50–3000 m.
-LWP_G_M2 = 200.0         # Nonnegative; baseline is 100 g/m².
-IWP_G_M2 = 30.0          # Nonnegative; baseline is 30 g/m².
-
-# Use a new simple name before rerunning to preserve earlier experiment files.
-EXPERIMENT_NAME = "experiment01"
-PREDICTION = ""          # Optional: write your prediction before calculating.
-
-experiment_atmosphere = build_column(
-    depth_m=CLOUD_DEPTH_M, lwp_gm2=LWP_G_M2, iwp_gm2=IWP_G_M2)
-
-# Layer means require a finite-volume sum, not a trapezoid rule at layer centers.
-recovered_lwp = float((experiment_atmosphere.lwc * experiment_atmosphere.layer_thickness).sum())
-recovered_iwp = float((experiment_atmosphere.iwc * experiment_atmosphere.layer_thickness).sum())
-np.testing.assert_allclose([recovered_lwp, recovered_iwp], [LWP_G_M2, IWP_G_M2], atol=1e-10)
-display(pd.DataFrame({"Phase": ["Liquid", "Ice"],
-                      "Requested path (g/m²)": [LWP_G_M2, IWP_G_M2],
-                      "Integrated path (g/m²)": [recovered_lwp, recovered_iwp]}))
-fig = plot_profiles(experiment_atmosphere)
-plt.show()
-plt.close(fig)''')
-md('''**Checkpoint:** Locate both peaks. If you double depth while holding paths fixed, what happens to average water content? The two contents are not required to peak at the same altitude.
-
-Cloud water is imposed on a fixed atmosphere. This is an optical experiment: no condensation, freezing, precipitation, latent heating, or adjustment to temperature/humidity is simulated. Some extreme combinations can be physically unrealistic even when the radiative calculation is valid.''')
-md('''## 4. Test your prediction — 30–42 minutes
-
-Run the pair with your new cloud. The clear run is recomputed on the same grid as its cloudy partner. Depth changes also change the grid, so compare paired CRE rather than assuming every clear flux is identical across depth experiments.''')
-code('''start = time.perf_counter()
-experiment = run_column(experiment_atmosphere)
+atmosphere = build_column(depth_m=CLOUD_DEPTH_M, lwp_gm2=LWP_G_M2, iwp_gm2=IWP_G_M2)
+recovered = [float((atmosphere[name] * atmosphere.layer_thickness).sum())
+             for name in ("lwc", "iwc")]
+np.testing.assert_allclose(recovered, [LWP_G_M2, IWP_G_M2], rtol=1e-12, atol=1e-10)
+print(f"Mass check passed: LWP={recovered[0]:g}, IWP={recovered[1]:g} g/m².")
+experiment = run_column(atmosphere)
 experiment_files = save_case(experiment, OUTPUT, EXPERIMENT_NAME)
-print(f"Experiment pair finished in {time.perf_counter()-start:.1f} s (including saving figures).")
-display(Image(filename=str(experiment_files["fluxes"])))
-display(Image(filename=str(experiment_files["cre"])))
+display(Image(filename=str(experiment_files["profiles"])))
+print("Your cloud has been calculated and saved. Continue to the comparison.")''')
+md('''## 4. Compare and discuss — 35–43 minutes
 
-base_table = boundary_summary(baseline)
-new_table = boundary_summary(experiment)
-comparison = base_table[["Boundary", "Band", "CRE (W/m²)"]].rename(
+**Cloud radiative effect (CRE)** is all-sky net flux minus clear-sky net flux. Positive surface CRE adds downward energy to the surface. The model top at 60 km approximates the top of the atmosphere; positive CRE there adds energy to the combined atmosphere–surface system.
+
+Run the comparison. Did your prediction hold? Explain one change using reflection, absorption, or emission. At fixed paths, increasing depth spreads the same mass over more height. Each cloudy run has its own matching clear run; compare their CREs.
+
+Radiation is calculated in one vertical column without exchange with neighboring columns. This illustrates the independent-column assumption discussed by Pincus et al. (introduction and section 2.2).''')
+code('''display(Image(filename=str(experiment_files["fluxes"])))
+comparison = baseline_summary[["Boundary", "Band", "CRE (W/m²)"]].rename(
     columns={"CRE (W/m²)": "Baseline CRE (W/m²)"}).merge(
-    new_table[["Boundary", "Band", "CRE (W/m²)"]].rename(
+    boundary_summary(experiment)[["Boundary", "Band", "CRE (W/m²)"]].rename(
         columns={"CRE (W/m²)": "Experiment CRE (W/m²)"}), on=["Boundary", "Band"])
-comparison["Change in CRE (W/m²)"] = comparison["Experiment CRE (W/m²)"] - comparison["Baseline CRE (W/m²)"]
+comparison["Change in CRE (W/m²)"] = (
+    comparison["Experiment CRE (W/m²)"] - comparison["Baseline CRE (W/m²)"])
 display(comparison.round(2))''')
-md('''**Choose one follow-up, if time allows:** double IWP; remove liquid; double depth at fixed paths; or remove both phases. Return to the parameter cell, change the experiment name, then rerun through this section. Keep the other controls fixed.
+md('''## 5. Explain and download — 43–50 minutes
 
-At fixed water paths and sizes, spreading cloud mass over a greater depth can leave total cloud optical depth similar while changing its vertical temperature placement and distribution relative to absorbing gases. Predict whether SW or LW will respond more strongly; the outcome is not guaranteed to be the same in every atmosphere.''')
-code('''# A physical consistency check: no cloud must reproduce clear sky.
-# This is a new, genuine model calculation, not a stored answer.
-empty = run_column(build_column(depth_m=CLOUD_DEPTH_M, lwp_gm2=0.0, iwp_gm2=0.0))
-for band in ("sw", "lw", "total"):
-    np.testing.assert_allclose(empty[f"{band}_flux_net"], empty[f"{band}_flux_net_clear"],
-                               rtol=1e-10, atol=1e-8)
-print("PASS: zero liquid + zero ice gives matching clear/all-sky net fluxes.")''')
-md('''## 5. Explain and share — 42–50 minutes
+Complete the interpretation below: **I changed ___. The surface CRE changed by ___ W m⁻² because ___. One simplifying assumption is ___.** Run the cell, save the notebook, and download **one CSV and one PNG** using the links. These downloads complete the activity.
 
-Discuss with a partner, then complete these statements:
+If time remains, save them in your GitHub account using **Add file → Upload files** in your own repository or fork. GitHub upload is optional.
 
-1. I changed ___ while holding ___ fixed.
-2. The surface SW/LW/net CRE changed by ___ W m⁻² because ___.
-3. One assumption that limits applying this result to a real cloud is ___.
+Equations, model settings, extra experiments, and verification details are in [SCIENCE_NOTES.md](SCIENCE_NOTES.md); they are optional reference material.
 
-Write your interpretation in the cell below. Save the notebook, then download the result CSV and one PNG from Jupyter. In **your own GitHub fork**, use **Add file → Upload files** and commit them with a short descriptive message. Your GitHub account stores the results; model downloads do not require a GitHub login.''')
-code('''INTERPRETATION = ""   # Add two or three sentences before sharing.
+Reference: Pincus, R., Mlawer, E. J., and Delamere, J. S. (2019), *JAMES*, 11, 3074–3089, [doi:10.1029/2019MS001621](https://doi.org/10.1029/2019MS001621).''')
+code('''INTERPRETATION = ""  # Write your explanation here, then run this cell.
 
 record = comparison.copy()
 record["experiment_name"] = EXPERIMENT_NAME
 record["baseline_depth_m"] = baseline_parameters["depth_m"]
 record["baseline_lwp_g_m2"] = baseline_parameters["lwp_gm2"]
 record["baseline_iwp_g_m2"] = baseline_parameters["iwp_gm2"]
-record["experiment_depth_m"] = CLOUD_DEPTH_M
-record["experiment_lwp_g_m2"] = LWP_G_M2
-record["experiment_iwp_g_m2"] = IWP_G_M2
+record["experiment_depth_m"] = experiment.attrs["cloud_depth_m"]
+record["experiment_lwp_g_m2"] = experiment.attrs["requested_lwp_gm2"]
+record["experiment_iwp_g_m2"] = experiment.attrs["requested_iwp_gm2"]
 record["prediction"] = PREDICTION
 record["interpretation"] = INTERPRETATION
 record.to_csv(OUTPUT / "experiment_record.csv", index=False)
 record.to_csv(OUTPUT / f"{EXPERIMENT_NAME}_record.csv", index=False)
-print("Saved numerical results. Add your interpretation before uploading if still blank.")
+print("Download your CSV and PNG below. Add your explanation if still blank, then rerun.")
 display(FileLink("outputs/experiment_record.csv"))
-display(FileLink(str(experiment_files["fluxes"].relative_to(ROOT))))
-display(FileLink(str(experiment_files["profiles"].relative_to(ROOT))))
-display(FileLink(str(experiment_files["netcdf"].relative_to(ROOT))))''')
-md(r'''## Optional: look under the hood after class
+display(FileLink(str(experiment_files["fluxes"].relative_to(ROOT))))''')
 
-The readable implementation is in `workshop_model.py`. Its key calls are:
-
-```python
-atmosphere = build_column(depth_m=1000, lwp_gm2=100, iwp_gm2=30)
-result = run_column(atmosphere)
-files = save_case(result, "outputs", "my_case")
-```
-
-Within `run_column`, gas optics are recomputed for clear and cloudy runs, cloud optical properties are added for the cloudy run, and the resulting optical problem is passed to RTE. The cloud lookup table requires **layer water paths**, not the total path repeated in every layer. In the pinned wrapper, the variable named `rei` interpolates the **ice effective-diameter** table; the helper passes 60 µm unchanged, not 30 µm. Ice roughness category index 1 (the second tabulated category) is fixed by this wrapper.
-
-NetCDF files retain the atmosphere, input parameters, native fluxes, clear counterparts, net fluxes, CRE, coefficient hashes, and diagnostic heating rates. For net-downward flux and pressure decreasing upward, the diagnostic is
-
-$$Q=-\frac{g}{c_p}\frac{\partial F_\mathrm{net}}{\partial p}\times86400\quad[\mathrm{K\ day^{-1}}].$$
-
-This diagnoses instantaneous radiative heating/cooling; it does not advance the atmospheric temperature.
-
-### References and attribution
-
-Pincus, R., Mlawer, E. J., and Delamere, J. S.: Balancing accuracy, efficiency, and flexibility in radiation calculations for dynamical models, *J. Adv. Model. Earth Syst.*, **11**, 3074–3089, https://doi.org/10.1029/2019MS001621, 2019.
-
-- [RTE+RRTMGP core](https://github.com/earth-system-radiation/rte-rrtmgp)
-- [Official Python interface, v0.2.5](https://github.com/earth-system-radiation/pyRTE-RRTMGP/tree/v0.2.5)
-- [Coefficient data, v1.9](https://github.com/earth-system-radiation/rrtmgp-data/tree/v1.9)
-
-Teaching text paraphrases the supplied paper. Synthetic cloud profiles, prescribed atmospheric state, particle sizes, and classroom prompts are workshop choices. This is a radiation sensitivity activity, not a validation of a CAESAR retrieval or a synthetic satellite footprint.''')
-
-# Raw strings above preserve LaTeX; write conventional single backslashes.
-for cell in cells:
-    if cell.cell_type == 'markdown':
-        cell.source = cell.source.replace('\\\\', '\\')
-nb = nbf.v4.new_notebook(cells=cells)
-nb.metadata = {"kernelspec": {"display_name": "Python (RRTMGP Workshop)", "language": "python", "name": "rrtmgp-workshop"},
-               "language_info": {"name": "python", "version": "3.11"}}
-nbf.validate(nb)
-nbf.write(nb, root / "RRTMGP_Cloud_Workshop.ipynb")
-print(f"Wrote {len(cells)} cells ({sum(c.cell_type == 'code' for c in cells)} code cells)")
+notebook = {
+    "cells": cells,
+    "metadata": {
+        "kernelspec": {"display_name": "Python (RRTMGP Workshop)",
+                       "language": "python", "name": "rrtmgp-workshop"},
+        "language_info": {"name": "python", "version": "3.11"},
+    },
+    "nbformat": 4,
+    "nbformat_minor": 5,
+}
+path = ROOT / "RRTMGP_Cloud_Workshop.ipynb"
+path.write_text(json.dumps(notebook, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
+words = sum(len(re.findall(r"\S+", "".join(c["source"]))) for c in cells if c["cell_type"] == "markdown")
+print(f"Wrote {path.name}: {len(cells)} cells; {sum(c['cell_type']=='code' for c in cells)} code cells; {words} Markdown words.")

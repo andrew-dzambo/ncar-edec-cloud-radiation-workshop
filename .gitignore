@@ -9,3 +9,10 @@ __pycache__/
 
 # Personal experiment outputs; deliberately upload selected results to your fork.
 /outputs/
+
+# Per-checkout pointer to the instructor-prepared shared runtime
+.workshop-runtime.json
+.workshop-runtime-*.tmp
+.workshop-python
+.workshop-python.tmp
+.runtime-tests/

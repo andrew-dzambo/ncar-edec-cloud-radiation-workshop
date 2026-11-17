@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Instructor/server preparation only, before the timed activity.
+# Participants use configure_workshop.sh during the workshop; no assigned preparation.
+# Standalone users may also run this installer outside the timed workshop.
 # Run on the Linux server: bash setup_workshop.sh
 # Windows PowerShell/macOS Terminal are used to SSH to that server first.
 # No sudo, shell-profile edits, conda activation, or GitHub credentials are used.
@@ -43,7 +46,7 @@ if [[ ! -x "$MAMBA" ]]; then
 fi
 
 if [[ ! -x "$RUNTIME_PREFIX/bin/python" ]]; then
-    # Explicit URLs + package hashes avoid solving the environment in class.
+    # Explicit URLs + package hashes reproduce the instructor-prepared environment.
     if [[ -f "$WORKSHOP_ROOT/environment-linux-64.lock" ]]; then
         SPEC="$WORKSHOP_ROOT/environment-linux-64.lock"
     else
@@ -63,4 +66,4 @@ fi
     --name rrtmgp-workshop --display-name "Python (RRTMGP Workshop)" \
     --env OMP_NUM_THREADS 1 --env OPENBLAS_NUM_THREADS 1 --env MKL_NUM_THREADS 1 \
     --env NUMEXPR_NUM_THREADS 1 --env PYTHONNOUSERSITE 1
-printf '\nSetup complete. Start Jupyter on an approved interactive/server session:\n  bash "%s/launch_workshop.sh" 8888\n' "$WORKSHOP_ROOT"
+printf '\nInstructor runtime ready. Give participants this shared checkout path:\n  %s\nThey run from their own cloned checkout:\n  bash configure_workshop.sh "%s"\n' "$WORKSHOP_ROOT" "$WORKSHOP_ROOT"

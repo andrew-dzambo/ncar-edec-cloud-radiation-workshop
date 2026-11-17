@@ -1,0 +1,44 @@
+{
+  "status": "passed",
+  "participant_configuration_seconds": 2.661,
+  "notebook_code_cells": 5,
+  "cell_timings": [
+    {
+      "cell": 1,
+      "seconds": 0.881
+    },
+    {
+      "cell": 2,
+      "seconds": 1.567
+    },
+    {
+      "cell": 3,
+      "seconds": 1.307
+    },
+    {
+      "cell": 4,
+      "seconds": 0.009
+    },
+    {
+      "cell": 5,
+      "seconds": 0.006
+    }
+  ],
+  "runtime_mode": "shared",
+  "participant_environment_or_coefficient_downloads": false,
+  "all_outputs_created": true,
+  "live_browser_ssh_or_hub_tested": false,
+  "timing_scope": "Automated steps on this host only; excludes browser sign-in, repository download, human interactions, network and scheduler delays.",
+  "execution_method": "IPython in-process; participant shared-runtime copy",
+  "local_jupyter_server_http_tested": true,
+  "live_jupyter_kernel_tested": false,
+  "kernel_transport_attempt": "Blocked before cells: host denied ZeroMQ network-interface operation (Operation not permitted).",
+  "shared_configuration_checks": {
+    "repeat_setup": true,
+    "paths_with_spaces": true,
+    "wrong_kernel_error": true,
+    "missing_data_error": true,
+    "local_runtime_fallback": true,
+    "shared_tree_unchanged": true
+  }
+}

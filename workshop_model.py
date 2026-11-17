@@ -50,8 +50,9 @@ def find_data_dir(data_dir=None):
         "RRTMGP_DATA", str(PACKAGE_ROOT / ".cache" / "rrtmgp-data")))
     if not all((path / f).is_file() for f in COEFFICIENT_FILES):
         raise FileNotFoundError(
-            f"RRTMGP coefficients not found in {path}. Run bash setup_workshop.sh "
-            "first, or set RRTMGP_DATA to the pinned v1.9 data directory.")
+            f"RRTMGP coefficients not found in {path}. Use the facilitator's "
+            "configure_workshop.sh command and select the workshop kernel, "
+            "or set RRTMGP_DATA to the prepared v1.9 data directory.")
     return path.resolve()
 
 
