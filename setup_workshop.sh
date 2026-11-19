@@ -1,9 +1,5 @@
 #!/usr/bin/env bash
-# Instructor/server preparation only, before the timed activity.
-# Participants use configure_workshop.sh during the workshop; no assigned preparation.
-# Standalone users may also run this installer outside the timed workshop.
-# Run on the Linux server: bash setup_workshop.sh
-# Windows PowerShell/macOS Terminal are used to SSH to that server first.
+# Install the workshop in this personal Linux checkout or Codespace.
 # No sudo, shell-profile edits, conda activation, or GitHub credentials are used.
 set -Eeuo pipefail
 trap 'printf "Setup stopped at line %s. Read the error above, fix it, then rerun this script.\n" "$LINENO" >&2' ERR
@@ -26,7 +22,7 @@ if [[ ! "$GLIBC_MAJOR" =~ ^[0-9]+$ || ! "$GLIBC_MINOR" =~ ^[0-9]+$ ]] || \
     echo "Ask your server administrator for a compatible compute node or supported container." >&2
     exit 2
 fi
-for program in curl tar sha256sum; do
+for program in curl tar bzip2 sha256sum; do
     command -v "$program" >/dev/null || { echo "Missing $program; ask the Linux server administrator to provide it." >&2; exit 2; }
 done
 
@@ -66,4 +62,15 @@ fi
     --name rrtmgp-workshop --display-name "Python (RRTMGP Workshop)" \
     --env OMP_NUM_THREADS 1 --env OPENBLAS_NUM_THREADS 1 --env MKL_NUM_THREADS 1 \
     --env NUMEXPR_NUM_THREADS 1 --env PYTHONNOUSERSITE 1
-printf '\nInstructor runtime ready. Give participants this shared checkout path:\n  %s\nThey run from their own cloned checkout:\n  bash configure_workshop.sh "%s"\n' "$WORKSHOP_ROOT" "$WORKSHOP_ROOT"
+
+# VS Code discovers user kernels from outside the installed conda prefix.
+if [[ "${CODESPACES:-false}" == true ]]; then
+    "$RUNTIME_PREFIX/bin/python" -m ipykernel install --user \
+        --name rrtmgp-workshop --display-name "Python (RRTMGP Workshop)" \
+        --env OMP_NUM_THREADS 1 --env OPENBLAS_NUM_THREADS 1 \
+        --env MKL_NUM_THREADS 1 --env NUMEXPR_NUM_THREADS 1 \
+        --env PYTHONNOUSERSITE 1 --env PYTHONPATH ""
+    echo 'Ready. Open RRTMGP_Cloud_Workshop.ipynb and select Python (RRTMGP Workshop).'
+else
+    echo 'Ready. From your workshop directory run: bash launch_workshop.sh 8888'
+fi

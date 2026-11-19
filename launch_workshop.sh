@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Start Jupyter from your own checkout after configure_workshop.sh.
+# Start Jupyter from your own checkout after setup_workshop.sh.
 # Optional argument: server port (default 8888); use your assigned unique port.
 # Use an approved interactive session. This launcher never installs anything.
 set -Eeuo pipefail
@@ -20,7 +20,7 @@ if [[ -f "$WORKSHOP_ROOT/.workshop-runtime.json" ]]; then
 else
     PYTHON="$WORKSHOP_ROOT/envs/rrtmgp/bin/python"
     if [[ ! -x "$PYTHON" ]]; then
-        echo "First run bash configure_workshop.sh /path/to/instructor/shared-checkout on the Linux server." >&2
+        echo "First run bash setup_workshop.sh from your own workshop checkout." >&2
         exit 2
     fi
 fi

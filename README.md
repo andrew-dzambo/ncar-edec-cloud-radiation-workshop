@@ -1,27 +1,12 @@
 # NCAR EDEC Cloud Radiation Workshop
 
-**Build a cloud, change the radiation.** In this 50-minute activity, participants run RTE+RRTMGP, change a synthetic cloud, and save clear-sky/all-sky radiation results. All participant setup is included in the activity.
+Build a cloud and measure how it changes sunlight and thermal radiation in **50 minutes**. Each person runs the notebook in their own Linux workspace. Windows and Mac users can use the browser option.
 
-Use a Windows or Mac laptop browser to access the organizer's prepared Linux Jupyter service. Participants download a small working copy of this repository and select the shared workshop environment; they do not install the model or its dependencies.
+**[Start here: create my GitHub Codespace](https://codespaces.new/andrew-dzambo/ncar-edec-cloud-radiation-workshop/tree/main?quickstart=1)**
 
-**Start here:** [Participant instructions](GETTING_STARTED.md) → [Workshop notebook](RRTMGP_Cloud_Workshop.ipynb).
+**[Participant instructions, including your own Linux or SSH login](GETTING_STARTED.md)** · [Workshop notebook](RRTMGP_Cloud_Workshop.ipynb) · [Saved-run activity if setup is slow](SAVED_RUN.md)
 
-The organizer must supply a working JupyterHub/Open OnDemand URL, access credentials, and the shared workshop directory. See the [facilitator guide](INSTRUCTOR_GUIDE.md) for deployment and rehearsal. This repository does not mean that an institutional server has already been configured.
-
-## The 50-minute activity
-
-| Minutes | Activity |
-|---|---|
-| 0–2 | Sign in to the organizer's Jupyter service |
-| 2–5 | Download your working copy and configure the shared environment |
-| 5–8 | Open the notebook and choose the workshop kernel |
-| 8–10 | Run the readiness check and begin the baseline |
-| 10–20 | Compare baseline clear-sky and all-sky fluxes |
-| 20–35 | Create your cloud and check its water budget |
-| 35–43 | Compare the radiation response |
-| 43–50 | Save a PNG and CSV; discuss the result |
-
-Ten minutes is the startup target for a rehearsed, prepared service. Creating accounts or installing a model on an arbitrary server is not part of that target. GitHub forking and uploading results are optional follow-up activities.
+Allow the first 10 minutes for startup. The first launch downloads the pinned model and data. At minute 10, participants who are still waiting can work with the supplied baseline and doubled-liquid runs directly on GitHub. Run the baseline by minute 20, change one cloud property by minute 35, then compare the fluxes and save your PNG and CSV by minute 50. [Facilitator instructions](INSTRUCTOR_GUIDE.md).
 
 ## What you control
 

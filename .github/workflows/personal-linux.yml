@@ -1,0 +1,31 @@
+name: Personal Linux notebook
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'setup_workshop.sh'
+      - 'RRTMGP_Cloud_Workshop.ipynb'
+      - 'workshop_model.py'
+      - 'run_terminal.py'
+      - 'scripts/**'
+      - 'environment-linux-64.lock'
+      - '.devcontainer/**'
+      - '.github/workflows/personal-linux.yml'
+permissions:
+  contents: read
+jobs:
+  notebook:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install the personal workspace and register its user kernel
+        env:
+          CODESPACES: 'true'
+        run: bash setup_workshop.sh
+      - name: Run all five cells in the workshop kernel
+        run: |
+          envs/rrtmgp/bin/jupyter nbconvert --execute --to notebook --ExecutePreprocessor.kernel_name=rrtmgp-workshop --ExecutePreprocessor.timeout=180 --output-dir="$RUNNER_TEMP" RRTMGP_Cloud_Workshop.ipynb
+          test -s outputs/experiment_record.csv
+          test -s outputs/experiment01_fluxes.png

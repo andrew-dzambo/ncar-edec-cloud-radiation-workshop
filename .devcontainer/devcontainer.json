@@ -1,0 +1,17 @@
+{
+  "name": "Cloud radiation workshop",
+  "image": "mcr.microsoft.com/devcontainers/universal:2",
+  "onCreateCommand": "bash setup_workshop.sh",
+  "waitFor": "onCreateCommand",
+  "customizations": {
+    "codespaces": {
+      "openFiles": ["RRTMGP_Cloud_Workshop.ipynb"]
+    },
+    "vscode": {
+      "extensions": ["ms-python.python", "ms-toolsai.jupyter"],
+      "settings": {
+        "python.defaultInterpreterPath": "${workspaceFolder}/envs/rrtmgp/bin/python"
+      }
+    }
+  }
+}

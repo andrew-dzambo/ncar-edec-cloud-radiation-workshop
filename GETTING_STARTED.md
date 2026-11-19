@@ -1,38 +1,52 @@
-# Start the workshop: minutes 0–10
+# Start your own cloud experiment
 
-All participant setup happens during the 50-minute activity. Use your Windows or Mac laptop browser. The facilitator will provide the **Jupyter URL**, **login details**, and **shared workshop directory** at the start. No local Python, terminal, or model installation is needed.
+Choose **one** route. Windows and Mac users can do the entire activity in a browser with their own GitHub account. All setup happens during the workshop.
 
-## 0–2 minutes: sign in
+## A. My GitHub Codespace (Windows, Mac or Linux)
 
-Open the facilitator's JupyterHub/Open OnDemand URL and sign in. Open the workshop's JupyterLab session using the facilitator's instructions. If sign-in fails, ask for help immediately.
+1. **[Create my Linux workspace](https://codespaces.new/andrew-dzambo/ncar-edec-cloud-radiation-workshop/tree/main?quickstart=1)**. Sign in with your own GitHub account. Choose **Create a new codespace** (or **Create codespace**) on `main`. If you previously used an older version of the workshop, create a fresh workspace.
+2. GitHub opens a browser editor and runs the workshop installer automatically. It downloads the pinned Python environment, RRTMGP and its coefficient tables into your workspace. While it starts, predict what doubling the liquid water in a cloud will do to surface sunlight.
+3. Open **RRTMGP_Cloud_Workshop.ipynb** in the file list if needed. At the top right click **Select Kernel**, then **Python (RRTMGP Workshop)**. If needed, choose **Select Another Kernel → Jupyter Kernel**. You can also select the Python environment whose interpreter ends in `envs/rrtmgp/bin/python`.
+4. Click the first code cell and press **Shift+Enter**. When it prints **Ready to run the baseline**, continue below. If workspace creation failed, check the creation log. In a working terminal, you can retry with `bash setup_workshop.sh`. If you are still waiting at minute 10, use the [saved-run activity](SAVED_RUN.md).
 
-## 2–5 minutes: get your working copy
+Your codespace is private to your account. GitHub applies your available compute and storage allowance. Download your outputs first, then **Stop codespace** from [Your codespaces](https://github.com/codespaces). Delete it when you are finished with the saved files to release storage.
 
-In JupyterLab, open **Terminal** from the launcher. Run these commands in that terminal, replacing `/SHARED/WORKSHOP_DIR` with the exact directory supplied by the facilitator:
+## B. My own Linux machine or Linux login
+
+Use an **x86_64 Linux** terminal (Intel/AMD, glibc 2.28 or newer) with Git, curl, tar, bzip2, internet access and at least 4 GB of free disk space. Use route A for Apple Silicon, ARM Linux, or a laptop without Linux. Windows users with a compatible WSL2 Linux environment can use this route. Run the commands below in your own writable directory. On a cluster use your site's approved interactive session.
 
 ```bash
-cd ~
-git clone https://github.com/andrew-dzambo/ncar-edec-cloud-radiation-workshop.git
+git clone --depth 1 https://github.com/andrew-dzambo/ncar-edec-cloud-radiation-workshop.git
 cd ncar-edec-cloud-radiation-workshop
-bash configure_workshop.sh /SHARED/WORKSHOP_DIR
+bash setup_workshop.sh && bash launch_workshop.sh 8888
 ```
 
-This downloads your own small copy and configures it to use the prepared model environment and coefficients. It does not install packages. If you already have this folder, open it and run the `configure_workshop.sh` command there instead of cloning again.
+Leave the terminal running. **On your Linux laptop or WSL2**, open the `http://127.0.0.1:8888/lab?token=...` address printed by Jupyter in your laptop browser. **On a remote Linux host**, start the tunnel below in a second terminal on your laptop (macOS Terminal or Windows PowerShell). Replace `YOU@HOST` with your login on the machine running Jupyter. If the port is occupied, choose another number in both commands. For a compute node behind a login node, use the site's documented jump-host route.
 
-## 5–8 minutes: open the notebook
+```text
+ssh -N -L 8888:127.0.0.1:8888 YOU@HOST
+```
 
-In JupyterLab's file browser, open `ncar-edec-cloud-radiation-workshop`, then **RRTMGP_Cloud_Workshop.ipynb**. Choose **Python (RRTMGP Workshop)** as the kernel. Refresh the page if the new kernel is not listed.
+Open the printed localhost URL, choose **RRTMGP_Cloud_Workshop.ipynb** and **Python (RRTMGP Workshop)**, then run the first code cell. All software and data live in your checkout. Each participant has their own files.
 
-The notebook on GitHub is a preview; run your copy inside JupyterLab.
+### Live model from the terminal
 
-## 8–10 minutes: check readiness and begin
+If setup finished but your notebook or kernel will not open, you can still run your own experiment in the same Linux terminal. From the workshop directory run:
 
-Run the notebook's readiness section with **Shift+Enter**, then begin the baseline calculation. Follow the notebook for the remaining activity.
+```bash
+envs/rrtmgp/bin/python run_terminal.py --depth 1000 --lwp 200 --iwp 30
+```
 
-**If you are not running by minute 10:** ask the facilitator for a prepared notebook copy or pair with someone whose session works. Do not start a package installation during the activity. Supplied reference figures can support discussion if the service is unavailable, but they are not results from your own model run.
+The baseline is fixed at 1,000 m, 100 g/m² liquid and 30 g/m² ice. Choose a prediction and change one quantity from those baseline values. The command runs both cases, prints the comparison and writes the CSV, PNGs and NetCDF files to `outputs/terminal/`. Open the PNGs and add your prediction and explanation to your downloaded CSV. To keep another run, add `--output outputs/another_run`.
 
-## Finish by minute 50
+## Finish within 50 minutes
 
-Save the notebook. In JupyterLab's file browser, open `outputs`, then download **experiment_record.csv** and one experiment **PNG**. These are your activity results.
+| Workshop clock | What to do |
+|---|---|
+| 0–10 min | Start your workspace. Run cell 1 and check for **Ready to run the baseline**. If blocked at minute 10, switch to the [saved-run activity](SAVED_RUN.md). |
+| 10–20 min | Run cell 2. Compare surface sunlight and infrared radiation with and without the baseline cloud. |
+| 20–35 min | In cell 3, write a prediction, change one input (depth, liquid water path or ice water path), and run the cell. |
+| 35–43 min | Run cell 4. Use the table to compare the surface and model-top responses. |
+| 43–50 min | Write your explanation in cell 5 and run it. Save your notebook. In the file explorer under `outputs/`, right-click `experiment_record.csv` and one experiment PNG and choose **Download**. |
 
-Forking the [repository](https://github.com/andrew-dzambo/ncar-edec-cloud-radiation-workshop) and uploading selected results to your GitHub account are optional after the activity. See the [facilitator guide](INSTRUCTOR_GUIDE.md#optional-github-follow-up) for that procedure.
+All five cells run in order with **Shift+Enter**. Keep the notebook at the repository root. If you switch kernels, restart from cell 1.

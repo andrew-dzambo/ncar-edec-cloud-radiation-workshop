@@ -106,7 +106,7 @@ The four selected files are `rrtmgp-gas-sw-g224.nc`, `rrtmgp-gas-lw-g256.nc`, `r
 
 ## Optional verification
 
-The timed startup checks the prepared environment; it does not install packages, download data, run the upstream reference case, or execute an additional cloud-free test. The instructor can run the package validation separately. These checks establish implementation consistency, not the uncertainty of an arbitrary invented cloud.
+Personal workspace setup installs the model and data. The first notebook cell checks that installation. The instructor can run the package validation separately. These checks establish implementation consistency, not the uncertainty of an arbitrary invented cloud.
 
 After the notebook's first cell has run, the official reference check can also be run in an additional cell:
 

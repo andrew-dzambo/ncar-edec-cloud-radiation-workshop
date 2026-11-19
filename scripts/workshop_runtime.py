@@ -71,7 +71,7 @@ def _check_paths(settings, mode):
     if not python.is_file() or not os.access(python, os.X_OK):
         if mode == "shared":
             raise RuntimeError(f"Shared Python is unavailable: {python}. Confirm the instructor's path is mounted on this node, then rerun bash configure_workshop.sh SHARED_CHECKOUT.")
-        raise RuntimeError("No prepared runtime is configured. In your Linux terminal run bash configure_workshop.sh /path/to/instructor/shared-checkout, then select 'Python (RRTMGP Workshop)'. The timed activity does not install a new environment.")
+        raise RuntimeError("In the terminal of your personal workshop checkout run bash setup_workshop.sh, then select the workshop kernel.")
     if not settings["source_root"].is_dir():
         raise RuntimeError(f"Shared source checkout is unavailable: {settings['source_root']}.")
     data = settings["data_dir"]
@@ -84,7 +84,7 @@ def _check_paths(settings, mode):
                 for chunk in iter(lambda: stream.read(1024 * 1024), b""):
                     value.update(chunk)
         except OSError as exc:
-            raise RuntimeError(f"Cannot read prepared coefficient file {path}. Ask the instructor to repair the shared runtime/data; no participant download is needed.") from exc
+            raise RuntimeError(f"Cannot read prepared coefficient file {path}. Check the data path and rerun bash setup_workshop.sh in your personal checkout.") from exc
         actual[filename] = value.hexdigest()
         if actual[filename] != expected:
             raise RuntimeError(f"Coefficient checksum mismatch: {path}. Ask the instructor to restore pinned rrtmgp-data v1.9 before continuing.")
@@ -106,7 +106,7 @@ def prepare_notebook(root):
     if not (expected / "bin" / "python").is_file():
         _check_paths(settings, mode)  # Gives the missing-runtime setup instruction.
     if Path(sys.prefix).resolve() != expected:
-        raise RuntimeError(f"Wrong notebook kernel: {sys.executable}. Select Kernel > Change Kernel > '{KERNEL_DISPLAY}', restart, then rerun this cell. Expected runtime: {expected}. If that kernel is missing, run bash configure_workshop.sh SHARED_CHECKOUT in your Linux terminal.")
+        raise RuntimeError(f"Wrong notebook kernel: {sys.executable}. Select Kernel > Change Kernel > '{KERNEL_DISPLAY}', restart, then rerun this cell. Expected runtime: {expected}. In Codespaces you can also select envs/rrtmgp/bin/python. See GETTING_STARTED.md for setup.")
     hashes = _check_paths(settings, mode)
     # Local helper uses the selected shared interpreter, without touching it.
     if __package__:
@@ -116,7 +116,7 @@ def prepare_notebook(root):
     try:
         versions = check_runtime()
     except (RuntimeError, ImportError, OSError) as exc:
-        raise RuntimeError(f"Prepared runtime validation failed: {exc}. Ask the instructor to repair it; participants should not run the installer during the activity.") from exc
+        raise RuntimeError(f"Prepared runtime validation failed: {exc}. Check GETTING_STARTED.md and rerun bash setup_workshop.sh in your personal checkout.") from exc
     return {"mode": mode, **{key: str(value) for key, value in settings.items()},
             **versions, "coefficient_sha256": hashes}
 

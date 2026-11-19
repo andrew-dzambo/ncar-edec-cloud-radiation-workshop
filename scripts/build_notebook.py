@@ -34,9 +34,9 @@ md('''# Build a cloud, change the radiation
 
 ## 1. Open and check — 0–10 minutes
 
-Open the instructor's Jupyter link on your Windows or Mac laptop, or follow the supplied connection instructions now. Select **Python (RRTMGP Workshop)**. The Linux server runs the model; your browser displays the results. All required participant work fits within this session. Use **Shift+Enter** to run each of the five code cells in order.
+Open your own GitHub Codespace or Linux checkout using the [participant instructions](GETTING_STARTED.md). In your personal workspace, select **Python (RRTMGP Workshop)** or the interpreter in `envs/rrtmgp/bin/python`. Press **Shift+Enter** to run each of the five code cells in order.
 
-The first cell checks the prepared model environment. If it stops, show the instructor the message. While everyone connects, predict whether adding liquid water will increase or decrease sunlight reaching the surface.
+The first cell checks your installation. While it starts, predict whether adding liquid water will increase or decrease sunlight reaching the surface. If setup is still running at minute 10, open the [saved-run activity](SAVED_RUN.md).
 
 **Plan:** open/check (0–10), baseline (10–20), build/run (20–35), compare (35–43), explain/download (43–50).''')
 code('''from pathlib import Path
