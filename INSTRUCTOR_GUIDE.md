@@ -2,7 +2,7 @@
 
 Project the repository home page or the [activity slide (PNG)](presentation/Workshop_activity_slide.png) and paste the [personal Codespace launch link](https://codespaces.new/andrew-dzambo/ncar-edec-cloud-radiation-workshop/tree/main?quickstart=1) and [participant guide](GETTING_STARTED.md) into the online chat. Participants with their own x86_64 Linux may choose route B. Everyone works in their own copy and keeps their own outputs.
 
-**Start the clock as people arrive.** Invite participants to start the installer at minute 0, then use the science slides while the downloads run. GitHub runs the setup automatically when it creates a new codespace. Existing shared installations can still use the legacy configuration script, but the public workshop uses personal workspaces.
+**Start the clock as people arrive.** Ask participants to create their personal Codespaces at minute 0, then use the science slides during the downloads. The editor opens while workshop setup runs automatically. Participants can follow the install with `tail -F .cache/workshop-setup.log` in a new terminal. If an older workspace entered recovery mode with “No space left on device,” ask that participant to create a new Codespace on `main` or use the [saved-run activity](SAVED_RUN.md) immediately.
 
 | Time | Facilitation |
 |---|---|

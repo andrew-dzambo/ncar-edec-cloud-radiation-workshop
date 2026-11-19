@@ -1,8 +1,9 @@
 {
   "name": "Cloud radiation workshop",
-  "image": "mcr.microsoft.com/devcontainers/universal:2",
-  "onCreateCommand": "bash setup_workshop.sh",
-  "waitFor": "onCreateCommand",
+  "image": "mcr.microsoft.com/devcontainers/base:noble",
+  "remoteUser": "vscode",
+  "waitFor": "updateContentCommand",
+  "postCreateCommand": "bash .devcontainer/prepare-workshop.sh",
   "customizations": {
     "codespaces": {
       "openFiles": ["RRTMGP_Cloud_Workshop.ipynb"]

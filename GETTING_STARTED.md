@@ -5,9 +5,11 @@ Choose **one** route. Windows and Mac users can do the entire activity in a brow
 ## A. My GitHub Codespace (Windows, Mac or Linux)
 
 1. **[Create my Linux workspace](https://codespaces.new/andrew-dzambo/ncar-edec-cloud-radiation-workshop/tree/main?quickstart=1)**. Sign in with your own GitHub account. Choose **Create a new codespace** (or **Create codespace**) on `main`. If you previously used an older version of the workshop, create a fresh workspace.
-2. GitHub opens a browser editor and runs the workshop installer automatically. It downloads the pinned Python environment, RRTMGP and its coefficient tables into your workspace. While it starts, predict what doubling the liquid water in a cloud will do to surface sunlight.
+2. GitHub opens a browser editor and installs the workshop automatically. The editor may open before the kernel is ready. To see progress, choose **Terminal → New Terminal** and enter `tail -F .cache/workshop-setup.log`. Wait for **Ready. Open RRTMGP_Cloud_Workshop.ipynb**, then press **Ctrl+C** to leave the log. While it starts, predict what doubling cloud liquid water will do to surface sunlight.
 3. Open **RRTMGP_Cloud_Workshop.ipynb** in the file list if needed. At the top right click **Select Kernel**, then **Python (RRTMGP Workshop)**. If needed, choose **Select Another Kernel → Jupyter Kernel**. You can also select the Python environment whose interpreter ends in `envs/rrtmgp/bin/python`.
-4. Click the first code cell and press **Shift+Enter**. When it prints **Ready to run the baseline**, continue below. If workspace creation failed, check the creation log. In a working terminal, you can retry with `bash setup_workshop.sh`. If you are still waiting at minute 10, use the [saved-run activity](SAVED_RUN.md).
+4. Click the first code cell and press **Shift+Enter**. When it prints **Ready to run the baseline**, continue below. If installation stops in the new editor, read the last lines of the setup log, then retry with `bash setup_workshop.sh`. At minute 10, anyone still waiting can use the [saved-run activity](SAVED_RUN.md).
+
+**Already in recovery mode with “No space left on device”?** Keep that tab for any personal work. Open the [workshop repository](https://github.com/andrew-dzambo/ncar-edec-cloud-radiation-workshop) on `main`, then choose **Code → Codespaces → +** to create a new Codespace. This starts a separate workspace with the smaller Ubuntu image. People whose notebooks already run can keep working in them.
 
 Your codespace is private to your account. GitHub applies your available compute and storage allowance. Download your outputs first, then **Stop codespace** from [Your codespaces](https://github.com/codespaces). Delete it when you are finished with the saved files to release storage.
 

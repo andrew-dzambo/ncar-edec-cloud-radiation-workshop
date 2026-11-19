@@ -30,6 +30,14 @@ done
 export OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 NUMEXPR_NUM_THREADS=1
 export PYTHONNOUSERSITE=1 PYTHONPATH=""
 mkdir -p "$WORKSHOP_ROOT/.tools" "$WORKSHOP_ROOT/.cache" "$WORKSHOP_ROOT/envs"
+if [[ "${CODESPACES:-false}" == true ]]; then
+    # The editor opens during setup. Protect the same prefix from a manual retry.
+    exec 9>"$WORKSHOP_ROOT/.cache/workshop-install.lock"
+    if ! flock -n 9; then
+        echo 'Setup is already running. Follow its progress in .cache/workshop-setup.log.' >&2
+        exit 1
+    fi
+fi
 MAMBA="$WORKSHOP_ROOT/.tools/bin/micromamba"
 if [[ ! -x "$MAMBA" ]]; then
     echo "Downloading micromamba 2.10.0 (about 7 MB) ..."
@@ -48,8 +56,13 @@ if [[ ! -x "$RUNTIME_PREFIX/bin/python" ]]; then
     else
         SPEC="$WORKSHOP_ROOT/environment.yml"
     fi
-    "$MAMBA" create --yes --root-prefix "$WORKSHOP_ROOT/.cache/micromamba" \
-        --prefix "$RUNTIME_PREFIX" --file "$SPEC" --strict-channel-priority
+    if ! "$MAMBA" create --yes --root-prefix "$WORKSHOP_ROOT/.cache/micromamba" \
+            --prefix "$RUNTIME_PREFIX" --file "$SPEC" --strict-channel-priority; then
+        echo 'The environment installation stopped. Available workspace space and inodes:' >&2
+        df -hP "$WORKSHOP_ROOT" >&2
+        df -iP "$WORKSHOP_ROOT" >&2
+        exit 1
+    fi
 fi
 if ! "$RUNTIME_PREFIX/bin/python" "$WORKSHOP_ROOT/scripts/check_runtime.py"; then
     echo "The existing envs/rrtmgp environment is incomplete or incompatible." >&2

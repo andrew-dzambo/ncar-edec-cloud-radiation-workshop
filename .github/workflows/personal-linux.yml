@@ -29,3 +29,34 @@ jobs:
           envs/rrtmgp/bin/jupyter nbconvert --execute --to notebook --ExecutePreprocessor.kernel_name=rrtmgp-workshop --ExecutePreprocessor.timeout=180 --output-dir="$RUNNER_TEMP" RRTMGP_Cloud_Workshop.ipynb
           test -s outputs/experiment_record.csv
           test -s outputs/experiment01_fluxes.png
+  codespace-container:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Prepare a 4 GiB workspace and install the Dev Container CLI
+        run: |
+          workspace="$RUNNER_TEMP/workshop-disk"
+          mkdir -p "$workspace"
+          truncate -s 4G "$RUNNER_TEMP/workshop.ext4"
+          mkfs.ext4 -q -F -m 0 "$RUNNER_TEMP/workshop.ext4"
+          sudo mount -o loop "$RUNNER_TEMP/workshop.ext4" "$workspace"
+          sudo chown "$(id -u):$(id -g)" "$workspace"
+          git archive HEAD | tar -x -C "$workspace"
+          npm install --prefix "$RUNNER_TEMP/devcli" @devcontainers/cli@0.83.3
+          echo "$RUNNER_TEMP/devcli/node_modules/.bin" >> "$GITHUB_PATH"
+      - name: Start the repository's dev container and run its setup hook
+        run: devcontainer up --workspace-folder "$RUNNER_TEMP/workshop-disk" --remote-env CODESPACES=true
+      - name: Run the notebook as the container user
+        run: |
+          devcontainer exec --workspace-folder "$RUNNER_TEMP/workshop-disk" bash -ec '
+            test "$(id -un)" = vscode
+            test -w "$HOME"
+            test -w "$PWD"
+            grep -Fq "Ready. Open RRTMGP_Cloud_Workshop.ipynb" .cache/workshop-setup.log
+            test -s "$HOME/.local/share/jupyter/kernels/rrtmgp-workshop/kernel.json"
+            envs/rrtmgp/bin/jupyter nbconvert --execute --to notebook --ExecutePreprocessor.kernel_name=rrtmgp-workshop --ExecutePreprocessor.timeout=180 --output-dir=/tmp RRTMGP_Cloud_Workshop.ipynb
+            test -s outputs/experiment_record.csv
+            test -s outputs/experiment01_fluxes.png
+            df -h .
+          '
